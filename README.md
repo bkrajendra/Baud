@@ -106,3 +106,7 @@ please open an issue first to discuss the approach.
 ## License
 
 Baud is licensed under the [MIT License](LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=bkrajendra/Baud.git&type=date&legend=bottom-right&sealed_token=whQ5KcDrMz9Uu1_GnEPhjqREdXDABtnZuoaRN1YuohiXfNTumHJYIMcjI8aECbO60YnS3zNCVcZHLKeIn_ybdLuVl2E5WIDZ-Z0V7IdK394m5gPZ29BvFfgeoXxS1V0oC2cwsSPz4v18uY5Y5EWr6P8era8snbajI3X5YPqXMEYeYJoSaXfkwq95jX1z)](https://www.star-history.com/?repos=bkrajendra%2FBaud.git&type=date&legend=bottom-right)
