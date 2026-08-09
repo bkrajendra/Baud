@@ -25,14 +25,39 @@ jobs:
 
       - name: Bump patch version
         id: bump
+        shell: python3 {0}
         run: |
-          current=$(grep -m1 '^version' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
-          IFS='.' read -r major minor patch <<< "$current"
-          new="$major.$minor.$((patch + 1))"
-          sed -i "0,/^version = \".*\"/s//version = \"$new\"/" Cargo.toml
-          cargo check
-          echo "version=$new" >> "$GITHUB_OUTPUT"
-          echo "tag=v$new" >> "$GITHUB_OUTPUT"
+          import os
+          import re
+
+          with open("Cargo.toml") as f:
+              toml = f.read()
+          match = re.search(r'^version = "(\d+)\.(\d+)\.(\d+)"', toml, re.MULTILINE)
+          major, minor, patch = match.groups()
+          new_version = f"{major}.{minor}.{int(patch) + 1}"
+          toml = toml[: match.start()] + f'version = "{new_version}"' + toml[match.end() :]
+          with open("Cargo.toml", "w") as f:
+              f.write(toml)
+
+          # Patch Cargo.lock's own "baud" package entry directly instead of
+          # running `cargo check` here — this job has no build toolchain
+          # dependencies installed (libudev/pkg-config etc.), which a full
+          # cargo invocation would require just to bump a version string.
+          with open("Cargo.lock") as f:
+              lock = f.read()
+          lock, count = re.subn(
+              r'(name = "baud"\nversion = ")[^"]+(")',
+              rf"\g<1>{new_version}\g<2>",
+              lock,
+              count=1,
+          )
+          assert count == 1, "expected to find exactly one baud package entry in Cargo.lock"
+          with open("Cargo.lock", "w") as f:
+              f.write(lock)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"version={new_version}\n")
+              f.write(f"tag=v{new_version}\n")
 
       - name: Commit and tag
         run: |
