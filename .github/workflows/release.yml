@@ -70,7 +70,8 @@ jobs:
       - name: Determine target triple
         id: triple
         shell: bash
-        run: echo "triple=$(rustc -vV | sed -n 's/host: //p')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "triple=$(rustc -vV | sed -n 's/host: //p')" >> "$GITHUB_OUTPUT"
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
