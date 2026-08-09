@@ -1,3 +1,47 @@
+use chrono::{DateTime, Local};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LineEnding {
+    None,
+    Lf,
+    Cr,
+    CrLf,
+}
+
+impl LineEnding {
+    pub const ALL: [LineEnding; 4] = [
+        LineEnding::None,
+        LineEnding::Lf,
+        LineEnding::Cr,
+        LineEnding::CrLf,
+    ];
+
+    pub fn as_bytes(&self) -> &'static [u8] {
+        match self {
+            LineEnding::None => b"",
+            LineEnding::Lf => b"\n",
+            LineEnding::Cr => b"\r",
+            LineEnding::CrLf => b"\r\n",
+        }
+    }
+}
+
+impl std::fmt::Display for LineEnding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = match self {
+            LineEnding::None => "None",
+            LineEnding::Lf => "\\n",
+            LineEnding::Cr => "\\r",
+            LineEnding::CrLf => "\\r\\n",
+        };
+        write!(f, "{label}")
+    }
+}
+
+pub fn format_timestamp(now: DateTime<Local>) -> String {
+    now.format("%H:%M:%S%.3f").to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
