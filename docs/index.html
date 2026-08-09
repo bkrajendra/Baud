@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baud — Serial. Simple. Fast.</title>
+<meta name="description" content="Baud — a modern, lightweight, blazing-fast serial terminal for debugging IoT devices, built in Rust.">
+<link rel="icon" type="image/png" href="app-icon.png">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a2e;
+    --muted: #5b6472;
+    --accent: #3b82f6;
+    --border: #e5e7eb;
+    --code-bg: #f5f7fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1117;
+      --fg: #e8eaed;
+      --muted: #9aa4b2;
+      --accent: #6ea8fe;
+      --border: #262b36;
+      --code-bg: #171b24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  header a.brand { display: flex; align-items: center; text-decoration: none; }
+  header img { height: 32px; }
+  header nav a {
+    color: var(--fg);
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: 600;
+  }
+  header nav a:hover { color: var(--accent); }
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+  main img { max-width: 100%; height: auto; border-radius: 8px; }
+  main p[align="center"], main div[align="center"] { text-align: center; }
+  h1, h2, h3 { line-height: 1.25; }
+  a { color: var(--accent); }
+  code, pre {
+    background: var(--code-bg);
+    border-radius: 6px;
+  }
+  pre { padding: 1rem; overflow-x: auto; }
+  code { padding: 0.15em 0.4em; }
+  pre code { padding: 0; }
+  blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 1rem 0;
+    padding: 0.25rem 1rem;
+    color: var(--muted);
+  }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    padding: 2rem 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="https://github.com/bkrajendra/Baud">
+    <img src="app-icon.png" alt="Baud">
+  </a>
+  <nav>
+    <a href="https://github.com/bkrajendra/Baud">GitHub</a>
+    <a href="https://github.com/bkrajendra/Baud/releases">Releases</a>
+  </nav>
+</header>
+<main>
+<p align="center">
+  <img src="logo.png" alt="Baud" width="480">
+</p>
+
+<p align="center">
+  <b>A modern, lightweight, blazing-fast serial terminal for debugging IoT devices.</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/bkrajendra/Baud/actions/workflows/release.yml"><img src="https://github.com/bkrajendra/Baud/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+  <a href="https://github.com/bkrajendra/Baud/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" alt="Platform support">
+  <img src="https://img.shields.io/badge/built%20with-Rust-orange" alt="Built with Rust">
+</p>
+
+<p align="center">
+  <img src="hero.png" alt="Baud serial terminal preview" width="900">
+</p>
+
+<blockquote>
+<p>The image above shows the direction Baud is headed. The Features section below lists exactly what's implemented today.</p>
+</blockquote>
+<h2 id="why-baud">Why Baud?</h2>
+<p>Every time I needed to debug an ESP32 or Arduino over serial, I went looking for a decent open-source serial monitor and came away frustrated — bloated Electron apps, terminals that didn't remember basic things like timestamps, or tools that just felt like an afterthought bolted onto something else.</p>
+<p>So I built the one I wanted: a native, single-purpose serial terminal in Rust. No Electron, no bundled runtime, no unnecessary features — just fast startup, a small binary, and a clean way to watch your device talk.</p>
+<h2 id="features-v01">Features (v0.1)</h2>
+<ul>
+<li><strong>Auto-detected COM ports</strong> — pick from a live-scanned list, with a manual refresh button for devices plugged in after launch</li>
+<li><strong>Standard + custom baud rates</strong> — 9600 through 230400 in a dropdown, or select "Custom" to enter any rate your device needs</li>
+<li><strong>Live terminal view</strong> — streamed serial output rendered as it arrives, with autoscroll you can pause to read back through history</li>
+<li><strong>Optional per-line timestamps</strong> — toggle <code>[HH:MM:SS.mmm]</code> prefixes on or off</li>
+<li><strong>Configurable line endings on send</strong> — None / <code>\n</code> / <code>\r</code> / <code>\r\n</code>, so you can match whatever your firmware expects</li>
+<li><strong>Dark and light themes</strong></li>
+<li><strong>Non-blocking I/O</strong> — serial reads happen on a background thread, so the UI never freezes regardless of baud rate or a silent device</li>
+</ul>
+<h2 id="roadmap">Roadmap</h2>
+<p>Baud is early. Things planned but not yet built:</p>
+<ul>
+<li>Hex view / binary inspection</li>
+<li>RX/TX color highlighting and line wrap toggle</li>
+<li>Saving terminal output to a log file</li>
+<li>Quick-send command macros</li>
+<li>Auto-reconnect on device replug</li>
+</ul>
+<p>Contributions and feature requests are welcome — see <a href="#contributing">Contributing</a>.</p>
+<h2 id="install">Install</h2>
+<p>Prebuilt binaries for Windows, macOS, and Linux are published on the <a href="https://github.com/bkrajendra/Baud/releases">Releases page</a> for every version. Download the archive for your platform, extract it, and run the <code>baud</code> (or <code>baud.exe</code>) binary — no installer required.</p>
+<h2 id="building-from-source">Building from source</h2>
+<p>Requires a Rust toolchain with edition 2024 support (Rust 1.85+).</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/bkrajendra/Baud.git</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> Baud</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span></span></code></pre></div>
+<p>On Linux, the build additionally needs the following system packages (Debian/Ubuntu names shown; adjust for your distro):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="at">-y</span> libudev-dev libxkbcommon-dev libgtk-3-dev</span></code></pre></div>
+<p>The compiled binary is at <code>target/release/baud</code> (<code>target\release\baud.exe</code> on Windows).</p>
+<h2 id="usage">Usage</h2>
+<ol type="1">
+<li>Plug in your device and launch Baud.</li>
+<li>Pick its port from the <strong>Port</strong> dropdown (click <strong>Refresh</strong> if it just appeared) and select a <strong>Baud</strong> rate — 115200 covers most ESP32/Arduino boards.</li>
+<li>Click <strong>Connect</strong>. Output starts streaming into the terminal pane.</li>
+<li>Type into the bottom input bar and press <strong>Enter</strong> (or click <strong>Send</strong>) to write back to the device. Pick the line ending your firmware expects from the dropdown next to it.</li>
+<li>Click <strong>Disconnect</strong> when you're done — the port is released immediately so you can reflash the device or reconnect elsewhere.</li>
+</ol>
+<h2 id="contributing">Contributing</h2>
+<p>Issues and pull requests are welcome. If you're proposing a larger change, please open an issue first to discuss the approach.</p>
+<h2 id="license">License</h2>
+<p>Baud is licensed under the <a href="https://github.com/bkrajendra/Baud/blob/main/LICENSE">MIT License</a>.</p>
+<h2 id="star-history">Star History</h2>
+<p><a href="https://www.star-history.com/?repos=bkrajendra%2FBaud.git&amp;type=date&amp;legend=bottom-right"><img src="https://api.star-history.com/chart?repos=bkrajendra/Baud.git&amp;type=date&amp;legend=bottom-right&amp;sealed_token=whQ5KcDrMz9Uu1_GnEPhjqREdXDABtnZuoaRN1YuohiXfNTumHJYIMcjI8aECbO60YnS3zNCVcZHLKeIn_ybdLuVl2E5WIDZ-Z0V7IdK394m5gPZ29BvFfgeoXxS1V0oC2cwsSPz4v18uY5Y5EWr6P8era8snbajI3X5YPqXMEYeYJoSaXfkwq95jX1z" alt="Star History Chart" /></a></p>
+
+</main>
+<footer>
+  Generated automatically from README.md — do not edit this file directly.
+</footer>
+</body>
+</html>
