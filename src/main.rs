@@ -1,4 +1,5 @@
 mod format;
+mod linebuf;
 
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
