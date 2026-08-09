@@ -9,6 +9,7 @@ pub struct BaudApp {
     available_ports: Vec<String>,
     selected_port: Option<String>,
     baud_rate: u32,
+    custom_baud_selected: bool,
     custom_baud_text: String,
 
     connection: Option<SerialConnection>,
@@ -31,6 +32,7 @@ impl Default for BaudApp {
             available_ports: list_ports(),
             selected_port: None,
             baud_rate: 115200,
+            custom_baud_selected: false,
             custom_baud_text: String::new(),
             connection: None,
             line_assembler: LineAssembler::new(),
@@ -145,23 +147,36 @@ impl eframe::App for BaudApp {
                     }
 
                     egui::ComboBox::from_id_salt("baud_combo")
-                        .selected_text(self.baud_rate.to_string())
+                        .selected_text(if self.custom_baud_selected {
+                            "Custom".to_string()
+                        } else {
+                            self.baud_rate.to_string()
+                        })
                         .show_ui(ui, |ui| {
                             for rate in BAUD_RATES {
-                                ui.selectable_value(&mut self.baud_rate, rate, rate.to_string());
+                                let selected = !self.custom_baud_selected && self.baud_rate == rate;
+                                if ui.selectable_label(selected, rate.to_string()).clicked() {
+                                    self.baud_rate = rate;
+                                    self.custom_baud_selected = false;
+                                }
+                            }
+                            if ui.selectable_label(self.custom_baud_selected, "Custom").clicked() {
+                                self.custom_baud_selected = true;
                             }
                         });
 
-                    ui.add(
-                        egui::TextEdit::singleline(&mut self.custom_baud_text)
-                            .hint_text("custom")
-                            .desired_width(60.0),
-                    );
-                    if ui.button("Use").clicked() {
-                        if let Ok(rate) = self.custom_baud_text.trim().parse::<u32>() {
-                            self.baud_rate = rate;
-                        } else {
-                            self.error_message = Some("Custom baud must be a number".to_string());
+                    if self.custom_baud_selected {
+                        ui.add(
+                            egui::TextEdit::singleline(&mut self.custom_baud_text)
+                                .hint_text("custom")
+                                .desired_width(60.0),
+                        );
+                        if ui.button("Use").clicked() {
+                            if let Ok(rate) = self.custom_baud_text.trim().parse::<u32>() {
+                                self.baud_rate = rate;
+                            } else {
+                                self.error_message = Some("Custom baud must be a number".to_string());
+                            }
                         }
                     }
                 });
