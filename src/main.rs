@@ -1,6 +1,9 @@
+mod app;
 mod format;
 mod linebuf;
 mod serial;
+
+use app::BaudApp;
 
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
@@ -11,14 +14,6 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Baud",
         options,
-        Box::new(|_cc| Ok(Box::new(EmptyApp))),
+        Box::new(|_cc| Ok(Box::new(BaudApp::default()))),
     )
-}
-
-struct EmptyApp;
-
-impl eframe::App for EmptyApp {
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        ui.label("Baud starting up...");
-    }
 }
