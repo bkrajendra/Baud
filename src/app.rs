@@ -249,7 +249,7 @@ impl eframe::App for BaudApp {
             });
             ui.separator();
 
-            let mut scroll_area = egui::ScrollArea::vertical();
+            let mut scroll_area = egui::ScrollArea::vertical().auto_shrink([false, true]);
             if self.autoscroll {
                 scroll_area = scroll_area.stick_to_bottom(true);
             }
