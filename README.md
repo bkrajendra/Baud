@@ -79,7 +79,7 @@ On Linux, the build additionally needs the following system packages
 (Debian/Ubuntu names shown; adjust for your distro):
 
 ```bash
-sudo apt-get install -y libudev-dev libxkbcommon-dev libgtk-3-dev
+sudo apt-get install -y pkg-config libudev-dev libxkbcommon-dev libgtk-3-dev
 ```
 
 The compiled binary is at `target/release/baud` (`target\release\baud.exe`
