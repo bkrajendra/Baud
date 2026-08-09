@@ -424,6 +424,7 @@ dependencies = [
  "chrono",
  "eframe",
  "egui",
+ "image",
  "serialport",
 ]
 
