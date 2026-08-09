@@ -2,6 +2,9 @@
 name = "baud"
 version = "0.1.0"
 edition = "2024"
+description = "A modern, lightweight, blazing-fast serial terminal for debugging IoT devices."
+license = "MIT"
+repository = "https://github.com/bkrajendra/Baud"
 
 [dependencies]
 chrono = { version = "0.4.45", default-features = false, features = ["clock"] }

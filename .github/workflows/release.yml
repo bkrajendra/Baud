@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          current=$(grep -m1 '^version' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          IFS='.' read -r major minor patch <<< "$current"
+          new="$major.$minor.$((patch + 1))"
+          sed -i "0,/^version = \".*\"/s//version = \"$new\"/" Cargo.toml
+          cargo check
+          echo "version=$new" >> "$GITHUB_OUTPUT"
+          echo "tag=v$new" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore: release ${{ steps.bump.outputs.tag }} [skip ci]"
+          git tag ${{ steps.bump.outputs.tag }}
+          git push origin HEAD:main
+          git push origin ${{ steps.bump.outputs.tag }}
+
+  build:
+    needs: bump-version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.bump-version.outputs.tag }}
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudev-dev libxkbcommon-dev libgtk-3-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Determine target triple
+        id: triple
+        shell: bash
+        run: echo "triple=$(rustc -vV | sed -n 's/host: //p')" >> "$GITHUB_OUTPUT"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $name = "baud-${{ needs.bump-version.outputs.tag }}-${{ steps.triple.outputs.triple }}"
+          New-Item -ItemType Directory -Path $name | Out-Null
+          Copy-Item target/release/baud.exe $name/
+          Copy-Item README.md,LICENSE $name/
+          Compress-Archive -Path $name -DestinationPath "$name.zip"
+          echo "asset=$name.zip" >> $env:GITHUB_ENV
+
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          name="baud-${{ needs.bump-version.outputs.tag }}-${{ steps.triple.outputs.triple }}"
+          mkdir "$name"
+          cp target/release/baud "$name"/
+          cp README.md LICENSE "$name"/
+          tar -czf "$name.tar.gz" "$name"
+          echo "asset=$name.tar.gz" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: baud-${{ matrix.os }}
+          path: ${{ env.asset }}
+
+  release:
+    needs: [bump-version, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.bump-version.outputs.tag }}
+          name: ${{ needs.bump-version.outputs.tag }}
+          files: dist/*
+          generate_release_notes: true
