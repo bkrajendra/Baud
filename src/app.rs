@@ -2,8 +2,17 @@
 use crate::format::{format_timestamp, LineEnding};
 use crate::linebuf::LineAssembler;
 use crate::serial::{list_ports, SerialConnection, SerialEvent};
+use std::time::{Duration, Instant};
 
 const BAUD_RATES: [u32; 6] = [9600, 19200, 38400, 57600, 115200, 230400];
+const PORT_POLL_INTERVAL: Duration = Duration::from_millis(1000);
+const NEW_PORT_TOAST_TIMEOUT: Duration = Duration::from_secs(8);
+
+#[derive(Clone)]
+struct NewPortToast {
+    port: String,
+    shown_at: Instant,
+}
 
 pub struct BaudApp {
     available_ports: Vec<String>,
@@ -24,6 +33,9 @@ pub struct BaudApp {
 
     dark_mode: bool,
     error_message: Option<String>,
+
+    last_port_scan: Instant,
+    new_port_toast: Option<NewPortToast>,
 }
 
 impl Default for BaudApp {
@@ -43,6 +55,8 @@ impl Default for BaudApp {
             line_ending: LineEnding::Lf,
             dark_mode: true,
             error_message: None,
+            last_port_scan: Instant::now(),
+            new_port_toast: None,
         }
     }
 }
@@ -80,6 +94,36 @@ impl BaudApp {
         self.lines.push((ts, text));
     }
 
+    fn poll_ports(&mut self) {
+        if self.last_port_scan.elapsed() < PORT_POLL_INTERVAL {
+            return;
+        }
+        self.last_port_scan = Instant::now();
+
+        let refreshed = list_ports();
+        let new_port = refreshed
+            .iter()
+            .find(|p| !self.available_ports.contains(p))
+            .cloned();
+
+        self.available_ports = refreshed;
+
+        if let Some(port) = new_port {
+            self.new_port_toast = Some(NewPortToast {
+                port,
+                shown_at: Instant::now(),
+            });
+        }
+    }
+
+    fn switch_to_new_port(&mut self, port: String) {
+        if self.is_connected() {
+            self.disconnect();
+        }
+        self.selected_port = Some(port);
+        self.connect();
+    }
+
     fn drain_serial_events(&mut self) {
         let mut events = Vec::new();
         if let Some(conn) = &self.connection {
@@ -113,6 +157,39 @@ impl BaudApp {
             }
         }
     }
+
+    fn show_new_port_toast(&mut self, ctx: &egui::Context) {
+        let Some(toast) = self.new_port_toast.clone() else {
+            return;
+        };
+
+        let mut keep_open = true;
+        egui::Area::new(egui::Id::new("new_port_toast"))
+            .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, -16.0))
+            .order(egui::Order::Foreground)
+            .show(ctx, |ui| {
+                egui::Frame::popup(ui.style()).show(ui, |ui| {
+                    ui.set_max_width(260.0);
+                    ui.strong("New device detected");
+                    ui.label(&toast.port);
+                    ui.add_space(4.0);
+                    ui.horizontal(|ui| {
+                        let label = if self.is_connected() { "Switch" } else { "Connect" };
+                        if ui.button(label).clicked() {
+                            self.switch_to_new_port(toast.port.clone());
+                            keep_open = false;
+                        }
+                        if ui.button("Dismiss").clicked() {
+                            keep_open = false;
+                        }
+                    });
+                });
+            });
+
+        if !keep_open {
+            self.new_port_toast = None;
+        }
+    }
 }
 
 impl eframe::App for BaudApp {
@@ -121,9 +198,21 @@ impl eframe::App for BaudApp {
         let ctx = &ctx;
 
         self.drain_serial_events();
-        if self.is_connected() {
-            ctx.request_repaint_after(std::time::Duration::from_millis(50));
+        self.poll_ports();
+
+        if let Some(toast) = &self.new_port_toast
+            && toast.shown_at.elapsed() > NEW_PORT_TOAST_TIMEOUT
+        {
+            self.new_port_toast = None;
         }
+
+        ctx.request_repaint_after(if self.is_connected() {
+            Duration::from_millis(50)
+        } else if self.new_port_toast.is_some() {
+            Duration::from_millis(200)
+        } else {
+            PORT_POLL_INTERVAL
+        });
 
         ctx.set_visuals(if self.dark_mode {
             egui::Visuals::dark()
@@ -263,5 +352,7 @@ impl eframe::App for BaudApp {
                 }
             });
         });
+
+        self.show_new_port_toast(ctx);
     }
 }
