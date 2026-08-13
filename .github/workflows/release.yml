@@ -179,6 +179,14 @@ jobs:
           </plist>
           PLIST
 
+          # Ad-hoc sign so arm64 Gatekeeper treats this as a normal
+          # unsigned app (bypassable "unidentified developer" prompt)
+          # instead of refusing to launch it as "damaged" outright.
+          # This doesn't require an Apple Developer account; it's not a
+          # substitute for real Developer ID signing + notarization,
+          # which would remove the Gatekeeper prompt entirely.
+          codesign --force --deep --sign - "$app"
+
           cp README.md LICENSE "$name"/
           ditto -c -k --sequesterRsrc --keepParent "$name" "$name.zip"
           echo "asset=$name.zip" >> "$GITHUB_ENV"
